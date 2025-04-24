@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Yes or No Wheel - A free online tool to help you make simple yes or no decisions. Spin the wheel and let fate decide!">
+    <meta name="keywords" content="yes or no wheel, yes no generator, decision wheel, random yes no, yes no picker, decision maker">
+    <title>Yes or No Wheel - Make Quick Decisions | YesOrNoGenerator.im</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <header>
+        <div class="top-nav">
+            <div class="logo">YesOrNoGenerator.im</div>
+            <div class="nav-buttons">
+                <button class="nav-btn" id="switchWheelBtn">Switch Wheel</button>
+                <button class="nav-btn" id="settingsBtn">Settings</button>
+                <button class="nav-btn" id="shareBtn">Share</button>
+                <button class="nav-btn" id="toolsBtn">Tools</button>
+            </div>
+        </div>
+        <div class="title-container">
+            <h1>Yes or No Wheel</h1>
+            <p class="subtitle">Solve simple dilemmas with a spin of the wheel</p>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="wheel-section">
+            <div class="wheel-container">
+                <canvas id="wheelCanvas" width="400" height="400"></canvas>
+                <div id="spinnerPointer"></div>
+                <button id="spinButton">SPIN</button>
+            </div>
+            
+            <div class="result-stats">
+                <div class="stat-item yes-stat">
+                    <div class="stat-count" id="yesCount">0</div>
+                    <div class="stat-label">YES</div>
+                </div>
+                <div class="stat-item no-stat">
+                    <div class="stat-count" id="noCount">0</div>
+                    <div class="stat-label">NO</div>
+                </div>
+            </div>
+            
+            <div id="resultDisplay"></div>
+        </section>
+
+        <section class="controls-section">
+            <div class="section-header">
+                <h3>Input Controls</h3>
+                <span class="expand-note">Click to expand</span>
+                <button class="toggle-btn" id="toggleInputControls">⊕</button>
+            </div>
+            <div class="inputs-container">
+                <div class="input-group">
+                    <label>Mode:</label>
+                    <div class="mode-selector">
+                        <button class="mode-btn active" data-mode="yes-no">YES/NO</button>
+                        <button class="mode-btn" data-mode="yes-no-maybe">YES/NO/MAYBE</button>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Number of input sets:</label>
+                    <div class="sets-selector">
+                        <button class="set-btn active" data-sets="1">1</button>
+                        <button class="set-btn" data-sets="2">2</button>
+                        <button class="set-btn" data-sets="3">3</button>
+                        <button class="set-btn" data-sets="4">4</button>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Actions:</label>
+                    <div class="action-buttons">
+                        <button id="hideInputsBtn">Hide Inputs</button>
+                        <button id="resetResultsBtn">Reset Results</button>
+                        <button id="openAllResultsBtn">Open All Results</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="tool-settings">
+            <div class="section-header" id="toolSettingsHeader">
+                <h3>Tool Settings</h3>
+                <span class="expand-note">Click to expand</span>
+                <button class="toggle-btn" id="toggleToolSettings">⊕</button>
+            </div>
+            <div class="settings-content">
+                <div class="settings-section">
+                    <h4>Spin Behavior</h4>
+                    <div class="setting-group">
+                        <label for="spinSpeed">Spin Speed</label>
+                        <input type="range" id="spinSpeed" min="1" max="10" value="5">
+                        <span class="range-value" id="spinSpeedValue">5</span>
+                    </div>
+                    <div class="setting-group">
+                        <label for="spinDuration">Spin Duration</label>
+                        <input type="range" id="spinDuration" min="1" max="10" value="5">
+                        <span class="range-value" id="spinDurationValue">5</span>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4>Confetti & Sound Effects</h4>
+                    <div class="setting-group">
+                        <label for="confettiToggle">Show Confetti</label>
+                        <label class="switch">
+                            <input type="checkbox" id="confettiToggle" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="setting-group">
+                        <label for="soundToggle">Play Sound Effects</label>
+                        <label class="switch">
+                            <input type="checkbox" id="soundToggle" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="sound-settings" id="soundSettings">
+                        <div class="setting-group">
+                            <label for="soundTheme">Sound Theme</label>
+                            <select id="soundTheme">
+                                <option value="default">Default</option>
+                                <option value="cheerful">Cheerful</option>
+                                <option value="classic">Classic</option>
+                                <option value="arcade">Arcade</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4>Tool Colors</h4>
+                    <div class="color-themes">
+                        <button class="theme-btn active" data-theme="default">Default</button>
+                        <button class="theme-btn" data-theme="vibrant">Vibrant</button>
+                        <button class="theme-btn" data-theme="pastel">Pastel</button>
+                        <button class="theme-btn" data-theme="contrast">High Contrast</button>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4>Background Color</h4>
+                    <div class="bg-color-picker">
+                        <input type="color" id="bgColorPicker" value="#f5f7fa">
+                        <button id="applyBgColor">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <section class="info-section">
+        <div class="info-content">
+            <h2>About the Yes or No Wheel</h2>
+            <p>The Yes or No Wheel is a simple yet powerful decision-making tool designed to help you make quick binary choices. When you're stuck between two options and can't decide, let the wheel make the choice for you!</p>
+            
+            <h3>When to Use the Yes or No Wheel</h3>
+            <p>This tool is perfect for various situations:</p>
+            <ul>
+                <li>When you're indecisive about a simple choice</li>
+                <li>To settle friendly disputes</li>
+                <li>For games that require random yes/no decisions</li>
+                <li>When you want to leave a choice to chance</li>
+                <li>For icebreaker activities and party games</li>
+            </ul>
+            
+            <h3>How It Works</h3>
+            <p>Our Yes or No Wheel uses a fair and random algorithm to determine the outcome. Each spin gives both "YES" and "NO" an equal chance of being selected, making it truly random. The wheel keeps track of your results, showing you how many times each option has been selected.</p>
+            
+            <p>For added flexibility, you can switch to our YES/NO/MAYBE mode when you need a middle option. Customize the spin settings, sound effects, and visual themes to make the experience your own.</p>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2023 YesOrNoGenerator.im - The Ultimate Yes or No Wheel</p>
+            <div class="footer-links">
+                <a href="#">About Us</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+                <a href="#">Contact</a>
+            </div>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-pinterest"></i></a>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Results Modal -->
+    <div class="modal" id="resultsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>All Results</h2>
+                <span class="close-modal" id="closeResultsModal">&times;</span>
+            </div>
+            <div class="modal-body" id="resultsContainer">
+                <!-- Results will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button id="clearResultsBtn">Clear All</button>
+                <button id="shareResultsBtn">Share Results</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 先加载脚本，执行DOM操作钩子 -->
+    <script src="script.js"></script>
+</body>
+</html> 

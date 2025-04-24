@@ -1,0 +1,885 @@
+// 立即执行函数，确保在DOM加载完成后执行
+(function() {
+    // 等待DOM完全加载
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("DOM已加载，开始初始化...");
+        initApp();
+    });
+
+    // 初始化应用程序
+    function initApp() {
+        // 获取DOM元素
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const spinButton = document.getElementById('spinButton');
+        const resultDisplay = document.getElementById('resultDisplay');
+        const yesCountElement = document.getElementById('yesCount');
+        const noCountElement = document.getElementById('noCount');
+
+        // 获取控制面板元素
+        const toggleInputControlsBtn = document.getElementById('toggleInputControls');
+        const toggleToolSettingsBtn = document.getElementById('toggleToolSettings');
+        const inputsContainer = document.querySelector('.inputs-container');
+        const settingsContent = document.querySelector('.settings-content');
+
+        // 获取设置元素
+        const spinSpeedInput = document.getElementById('spinSpeed');
+        const spinSpeedValue = document.getElementById('spinSpeedValue');
+        const spinDurationInput = document.getElementById('spinDuration');
+        const spinDurationValue = document.getElementById('spinDurationValue');
+        const confettiEnabledInput = document.getElementById('confettiToggle');
+        const soundEnabledInput = document.getElementById('soundToggle');
+        const soundThemeSelect = document.getElementById('soundTheme');
+        const soundSettingsGroup = document.getElementById('soundSettings');
+
+        // 获取模态窗口元素
+        const resultsModal = document.getElementById('resultsModal');
+        const closeResultsModal = document.getElementById('closeResultsModal');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const openAllResultsBtn = document.getElementById('openAllResultsBtn');
+        const clearResultsBtn = document.getElementById('clearResultsBtn');
+        const resetResultsBtn = document.getElementById('resetResultsBtn');
+        const shareResultsBtn = document.getElementById('shareResultsBtn');
+
+        // 获取模式和集合按钮
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        const setButtons = document.querySelectorAll('.set-btn');
+
+        // 获取颜色主题按钮和背景颜色选择器
+        const themeButtons = document.querySelectorAll('.theme-btn');
+        const bgColorPicker = document.getElementById('bgColorPicker');
+        const applyBgColorBtn = document.getElementById('applyBgColor');
+
+        // 获取导航按钮
+        const switchWheelBtn = document.getElementById('switchWheelBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const toolsBtn = document.getElementById('toolsBtn');
+        const hideInputsBtn = document.getElementById('hideInputsBtn');
+
+        // 检查DOM元素是否存在
+        function checkElements() {
+            console.log("DOM元素检查:");
+            console.log("wheelCanvas:", !!canvas);
+            console.log("spinButton:", !!spinButton);
+            console.log("confettiToggle:", !!confettiEnabledInput);
+            console.log("soundToggle:", !!soundEnabledInput);
+            console.log("toggleInputControls:", !!toggleInputControlsBtn);
+            console.log("toggleToolSettings:", !!toggleToolSettingsBtn);
+        }
+        
+        // 立即检查DOM元素
+        checkElements();
+
+        // 初始化变量
+        let spinning = false;
+        let currentRotation = 0;
+        let spinSpeed = 0;
+        let spinTime = 0;
+        let spinTimeTotal = 0;
+        let tickInterval = null;
+        let results = [];
+        let yesCount = 0;
+        let noCount = 0;
+        let panelsState = {
+            inputControls: true,
+            toolSettings: false
+        };
+
+        // 初始化设置值
+        let settings = {
+            mode: 'yes-no',
+            sets: 1,
+            spinSpeed: 5,
+            spinDuration: 5,
+            confettiEnabled: true,
+            soundEnabled: true,
+            soundTheme: 'default',
+            colorTheme: 'default'
+        };
+
+        // 固定的YES/NO选项
+        const wheelOptions = [
+            { text: "YES", color: "#4CAF50" },
+            { text: "NO", color: "#F44336" },
+            { text: "YES", color: "#4CAF50" },
+            { text: "NO", color: "#F44336" },
+            { text: "YES", color: "#4CAF50" },
+            { text: "NO", color: "#F44336" },
+            { text: "YES", color: "#4CAF50" },
+            { text: "NO", color: "#F44336" }
+        ];
+
+        // YES/NO/MAYBE选项
+        const maybeWheelOptions = [
+            { text: "YES", color: "#4CAF50" },
+            { text: "NO", color: "#F44336" },
+            { text: "MAYBE", color: "#FF9800" },
+            { text: "YES", color: "#4CAF50" },
+            { text: "NO", color: "#F44336" },
+            { text: "MAYBE", color: "#FF9800" },
+            { text: "YES", color: "#4CAF50" },
+            { text: "NO", color: "#F44336" },
+            { text: "MAYBE", color: "#FF9800" }
+        ];
+
+        // 当前使用的选项
+        let currentWheelOptions = wheelOptions;
+
+        // 音效库
+        const soundLibrary = {
+            // 主题包
+            themes: {
+                default: {
+                    start: 'default',
+                    spinning: 'default',
+                    ending: 'default'
+                },
+                cheerful: {
+                    start: 'happy',
+                    spinning: 'playful',
+                    ending: 'tada'
+                },
+                classic: {
+                    start: 'click',
+                    spinning: 'soft',
+                    ending: 'chime'
+                },
+                arcade: {
+                    start: 'beep',
+                    spinning: 'digital',
+                    ending: 'bell'
+                }
+            },
+            
+            // 开始音效
+            start: {
+                default: 'https://assets.mixkit.co/active_storage/sfx/212/212-preview.mp3',
+                click: 'https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3',
+                beep: 'https://assets.mixkit.co/active_storage/sfx/146/146-preview.mp3',
+                chime: 'https://assets.mixkit.co/active_storage/sfx/665/665-preview.mp3',
+                happy: 'https://assets.mixkit.co/active_storage/sfx/220/220-preview.mp3'
+            },
+            
+            // 旋转中音效 (滴答声)
+            spinning: {
+                default: 'https://soundbible.com/mp3/analog-watch-ticking-14416.mp3',
+                click: 'https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3',
+                digital: 'https://assets.mixkit.co/active_storage/sfx/2301/2301-preview.mp3',
+                soft: 'https://assets.mixkit.co/active_storage/sfx/2575/2575-preview.mp3',
+                playful: 'https://assets.mixkit.co/active_storage/sfx/1018/1018-preview.mp3'
+            },
+            
+            // 结束音效
+            ending: {
+                default: 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_bb630cc098.mp3',
+                tada: 'https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3',
+                chime: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3',
+                bell: 'https://assets.mixkit.co/active_storage/sfx/1862/1862-preview.mp3'
+            }
+        };
+
+        // 当前音效
+        let currentSounds = {
+            start: null,
+            spinning: null,
+            ending: null
+        };
+
+        // 预加载所有音效
+        const soundCache = {};
+
+        function preloadSounds() {
+            console.log("预加载音效...");
+            // 预加载开始音效
+            soundCache.start = {};
+            for (const [key, url] of Object.entries(soundLibrary.start)) {
+                soundCache.start[key] = new Audio(url);
+            }
+            
+            // 预加载旋转音效
+            soundCache.spinning = {};
+            for (const [key, url] of Object.entries(soundLibrary.spinning)) {
+                soundCache.spinning[key] = new Audio(url);
+                soundCache.spinning[key].volume = 0.5;
+            }
+            
+            // 预加载结束音效
+            soundCache.ending = {};
+            for (const [key, url] of Object.entries(soundLibrary.ending)) {
+                soundCache.ending[key] = new Audio(url);
+            }
+            
+            console.log("音效预加载完成");
+        }
+
+        // 更新当前音效
+        function updateCurrentSounds() {
+            if (soundThemeSelect.value !== 'default') {
+                // 如果选择了主题，使用主题的音效设置
+                const theme = soundThemeSelect.value;
+                const themeSettings = soundLibrary.themes[theme];
+                
+                currentSounds.start = soundCache.start[themeSettings.start];
+                currentSounds.spinning = soundCache.spinning[themeSettings.spinning];
+                currentSounds.ending = soundCache.ending[themeSettings.ending];
+            } else {
+                // 如果是默认主题，使用默认音效
+                currentSounds.start = soundCache.start.default;
+                currentSounds.spinning = soundCache.spinning.default;
+                currentSounds.ending = soundCache.ending.default;
+            }
+        }
+
+        // 初始化轮盘
+        function initWheel() {
+            console.log("初始化轮盘...");
+            
+            // 初始化设置
+            if (spinSpeedInput && spinDurationInput) {
+                settings.spinSpeed = parseInt(spinSpeedInput.value);
+                settings.spinDuration = parseInt(spinDurationInput.value);
+            }
+            
+            if (confettiEnabledInput && soundEnabledInput) {
+                settings.confettiEnabled = confettiEnabledInput.checked;
+                settings.soundEnabled = soundEnabledInput.checked;
+            }
+            
+            // 调用drawWheel绘制轮盘
+            drawWheel();
+            
+            // 设置面板初始状态
+            if (settingsContent) {
+                settingsContent.style.display = panelsState.toolSettings ? 'block' : 'none';
+            }
+            
+            // 更新声音设置面板的可见性
+            if (soundSettingsGroup && soundEnabledInput) {
+                soundSettingsGroup.style.display = soundEnabledInput.checked ? 'block' : 'none';
+            }
+            
+            // 更新设置值显示
+            if (spinSpeedValue && spinDurationValue) {
+                spinSpeedValue.textContent = spinSpeedInput.value;
+                spinDurationValue.textContent = spinDurationInput.value;
+            }
+            
+            // 更新计数器显示
+            updateCounters();
+            
+            // 加载保存的结果
+            loadResults();
+            
+            console.log("轮盘初始化完成");
+        }
+
+        // 绘制轮盘
+        function drawWheel() {
+            if (!canvas || !ctx) {
+                console.error("Canvas或上下文不存在，无法绘制轮盘");
+                return;
+            }
+            
+            console.log("开始绘制轮盘...");
+            
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 设置轮盘中心点
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 10;
+            
+            // 设置轮盘样式
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(currentRotation);
+            
+            // 绘制轮盘扇形
+            const numSegments = currentWheelOptions.length;
+            const segmentAngle = 2 * Math.PI / numSegments;
+            
+            for (let i = 0; i < numSegments; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, radius, i * segmentAngle, (i + 1) * segmentAngle);
+                ctx.closePath();
+                
+                // 设置扇形颜色
+                ctx.fillStyle = currentWheelOptions[i].color;
+                ctx.fill();
+                
+                // 添加文字
+                ctx.save();
+                ctx.rotate(i * segmentAngle + segmentAngle / 2);
+                ctx.translate(radius / 2, 0);
+                ctx.rotate(Math.PI / 2);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 24px Poppins';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(currentWheelOptions[i].text, 0, 0);
+                ctx.restore();
+            }
+            
+            // 绘制轮盘中心圆
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 0.1, 0, 2 * Math.PI);
+            ctx.fillStyle = '#2c3e50';
+            ctx.fill();
+            
+            ctx.restore();
+            
+            console.log("轮盘绘制完成");
+        }
+
+        // 播放滴答声
+        function playTickSound() {
+            if (settings.soundEnabled && currentSounds.spinning) {
+                // 为了避免连续播放导致声音重叠，克隆一个新的音频对象
+                const tickClone = new Audio(currentSounds.spinning.src);
+                tickClone.volume = 0.3;
+                tickClone.play();
+            }
+        }
+
+        // 开始滴答声
+        function startTickSound() {
+            if (settings.soundEnabled) {
+                // 根据速度调整滴答声间隔
+                const tickSpeed = Math.max(50, 200 - spinSpeed);
+                clearInterval(tickInterval);
+                tickInterval = setInterval(playTickSound, tickSpeed);
+            }
+        }
+
+        // 停止滴答声
+        function stopTickSound() {
+            clearInterval(tickInterval);
+        }
+
+        // 旋转轮盘
+        function rotateWheel() {
+            spinTime += 30;
+            
+            console.log(`旋转中: ${spinTime}/${spinTimeTotal}`);
+            
+            if (spinTime >= spinTimeTotal) {
+                stopRotateWheel();
+                return;
+            }
+            
+            // 计算旋转角度，使用easeOut效果
+            const spinFactor = easeOut(spinTime, 0, spinSpeed, spinTimeTotal);
+            currentRotation += (spinFactor * Math.PI / 180);
+            
+            // 绘制轮盘
+            drawWheel();
+            
+            // 继续动画
+            requestAnimationFrame(rotateWheel);
+        }
+
+        // 停止轮盘旋转
+        function stopRotateWheel() {
+            spinning = false;
+            
+            // 停止滴答声
+            stopTickSound();
+            
+            // 播放结果音效
+            if (settings.soundEnabled && currentSounds.ending) {
+                currentSounds.ending.currentTime = 0;
+                currentSounds.ending.play();
+            }
+            
+            // 计算结果
+            const degrees = currentRotation * 180 / Math.PI % 360;
+            const normalizedDegrees = degrees < 0 ? degrees + 360 : degrees;
+            
+            // 确定选中的扇形
+            const numSegments = currentWheelOptions.length;
+            const segmentAngle = 360 / numSegments;
+            const selectedSegment = Math.floor(normalizedDegrees / segmentAngle);
+            const result = currentWheelOptions[selectedSegment].text;
+            const resultColor = currentWheelOptions[selectedSegment].color;
+            
+            // 记录结果
+            recordResult(result);
+            
+            // 显示结果
+            resultDisplay.textContent = result;
+            resultDisplay.style.color = resultColor;
+            
+            // 显示彩色纸屑效果
+            if (settings.confettiEnabled) {
+                showConfetti();
+            }
+            
+            // 启用旋转按钮
+            spinButton.disabled = false;
+            
+            console.log("轮盘停止，结果:", result);
+        }
+
+        // 记录结果
+        function recordResult(result) {
+            const timestamp = new Date();
+            results.push({
+                result: result,
+                timestamp: timestamp
+            });
+            
+            // 更新计数器
+            if (result === 'YES') {
+                yesCount++;
+            } else if (result === 'NO') {
+                noCount++;
+            }
+            
+            // 更新计数器显示
+            updateCounters();
+            
+            // 保存结果
+            saveResults();
+        }
+
+        // 更新计数器显示
+        function updateCounters() {
+            if (yesCountElement && noCountElement) {
+                yesCountElement.textContent = yesCount;
+                noCountElement.textContent = noCount;
+            }
+        }
+
+        // 保存结果到本地存储
+        function saveResults() {
+            localStorage.setItem('yesNoResults', JSON.stringify({
+                results: results,
+                yesCount: yesCount,
+                noCount: noCount
+            }));
+        }
+
+        // 从本地存储加载结果
+        function loadResults() {
+            const savedData = localStorage.getItem('yesNoResults');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                results = data.results || [];
+                yesCount = data.yesCount || 0;
+                noCount = data.noCount || 0;
+                updateCounters();
+            }
+        }
+
+        // 重置结果
+        function resetResults() {
+            results = [];
+            yesCount = 0;
+            noCount = 0;
+            updateCounters();
+            saveResults();
+            resultDisplay.textContent = '';
+        }
+
+        // 填充结果模态窗口
+        function populateResultsModal() {
+            if (!resultsContainer) return;
+            
+            resultsContainer.innerHTML = '';
+            
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<p>No results yet. Spin the wheel to get some results!</p>';
+                return;
+            }
+            
+            // 创建结果列表
+            const resultsList = document.createElement('ul');
+            resultsList.className = 'results-list';
+            
+            // 添加最近的结果在前面
+            const recentResults = [...results].reverse();
+            
+            recentResults.forEach((item, index) => {
+                const resultItem = document.createElement('li');
+                resultItem.className = 'result-item';
+                
+                const resultText = document.createElement('span');
+                resultText.className = `result-text ${item.result.toLowerCase()}-result`;
+                resultText.textContent = item.result;
+                
+                const resultTime = document.createElement('span');
+                resultTime.className = 'result-time';
+                resultTime.textContent = formatTime(new Date(item.timestamp));
+                
+                resultItem.appendChild(resultText);
+                resultItem.appendChild(resultTime);
+                resultsList.appendChild(resultItem);
+            });
+            
+            resultsContainer.appendChild(resultsList);
+        }
+
+        // 格式化时间
+        function formatTime(date) {
+            return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+        }
+
+        // 缓动函数
+        function easeOut(t, b, c, d) {
+            const ts = (t /= d) * t;
+            const tc = ts * t;
+            return b + c * (tc + -3 * ts + 3 * t);
+        }
+
+        // 开始旋转
+        function startSpin() {
+            if (spinning) return;
+            
+            console.log("开始旋转轮盘...");
+            
+            // 重置结果显示
+            resultDisplay.textContent = '';
+            
+            // 禁用旋转按钮
+            spinButton.disabled = true;
+            
+            // 设置旋转参数
+            spinning = true;
+            spinTime = 0;
+            spinSpeed = 50 + parseInt(settings.spinSpeed) * 10; // 基础速度加上用户设置
+            spinTimeTotal = 1000 + parseInt(settings.spinDuration) * 500; // 基础时间加上用户设置
+            
+            console.log("旋转参数:", spinSpeed, spinTimeTotal);
+            
+            // 更新当前音效
+            updateCurrentSounds();
+            
+            // 播放开始音效
+            if (settings.soundEnabled && currentSounds.start) {
+                currentSounds.start.currentTime = 0;
+                currentSounds.start.play();
+            }
+            
+            // 开始滴答声
+            startTickSound();
+            
+            // 开始旋转动画
+            rotateWheel();
+        }
+
+        // 彩色纸屑效果
+        function showConfetti() {
+            const confettiCount = 200;
+            const confettiColors = ["#4CAF50", "#F44336"]; // 只使用YES和NO的颜色
+            
+            for (let i = 0; i < confettiCount; i++) {
+                createConfettiParticle(confettiColors[Math.floor(Math.random() * confettiColors.length)]);
+            }
+        }
+
+        // 创建单个纸屑粒子
+        function createConfettiParticle(color) {
+            const particle = document.createElement('div');
+            particle.style.position = 'absolute';
+            particle.style.width = Math.random() * 8 + 4 + 'px';
+            particle.style.height = Math.random() * 8 + 4 + 'px';
+            particle.style.backgroundColor = color;
+            particle.style.borderRadius = '50%';
+            particle.style.pointerEvents = 'none';
+            
+            // 设置粒子初始位置
+            const wheel = canvas.getBoundingClientRect();
+            const centerX = wheel.left + wheel.width / 2;
+            const centerY = wheel.top + wheel.height / 2;
+            
+            particle.style.left = centerX + 'px';
+            particle.style.top = centerY + 'px';
+            
+            document.body.appendChild(particle);
+            
+            // 粒子动画
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 5 + 5;
+            const vx = Math.cos(angle) * velocity;
+            const vy = Math.sin(angle) * velocity;
+            
+            let posX = centerX;
+            let posY = centerY;
+            let opacity = 1;
+            let gravity = 0.1;
+            
+            const animateParticle = () => {
+                posX += vx;
+                posY += vy;
+                vy += gravity;
+                opacity -= 0.02;
+                
+                particle.style.left = posX + 'px';
+                particle.style.top = posY + 'px';
+                particle.style.opacity = opacity;
+                
+                if (opacity > 0) {
+                    requestAnimationFrame(animateParticle);
+                } else {
+                    particle.remove();
+                }
+            };
+            
+            requestAnimationFrame(animateParticle);
+        }
+
+        // 切换面板可见性
+        function togglePanel(panelName) {
+            if (panelName === 'inputControls') {
+                panelsState.inputControls = !panelsState.inputControls;
+                inputsContainer.style.display = panelsState.inputControls ? 'block' : 'none';
+                toggleInputControlsBtn.textContent = panelsState.inputControls ? '⊖' : '⊕';
+            } else if (panelName === 'toolSettings') {
+                panelsState.toolSettings = !panelsState.toolSettings;
+                settingsContent.style.display = panelsState.toolSettings ? 'block' : 'none';
+                toggleToolSettingsBtn.textContent = panelsState.toolSettings ? '⊖' : '⊕';
+            }
+        }
+
+        // 打开结果模态窗口
+        function openResultsModal() {
+            populateResultsModal();
+            resultsModal.style.display = 'block';
+        }
+
+        // 关闭结果模态窗口
+        function closeResultsModal() {
+            resultsModal.style.display = 'none';
+        }
+
+        // 切换模式
+        function switchMode(mode) {
+            settings.mode = mode;
+            
+            // 更新轮盘选项
+            if (mode === 'yes-no') {
+                currentWheelOptions = wheelOptions;
+            } else if (mode === 'yes-no-maybe') {
+                currentWheelOptions = maybeWheelOptions;
+            }
+            
+            // 重新绘制轮盘
+            drawWheel();
+        }
+
+        // 应用背景颜色
+        function applyBackgroundColor() {
+            document.body.style.backgroundColor = bgColorPicker.value;
+        }
+
+        // 应用颜色主题
+        function applyColorTheme(theme) {
+            settings.colorTheme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            console.log("设置事件监听器...");
+            
+            // 旋转按钮
+            if (spinButton) {
+                spinButton.addEventListener('click', function() {
+                    console.log("旋转按钮被点击");
+                    startSpin();
+                });
+                console.log("旋转按钮事件监听器已绑定");
+            } else {
+                console.error("找不到旋转按钮元素！");
+            }
+            
+            // 模式按钮
+            modeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除所有active类
+                    modeButtons.forEach(btn => btn.classList.remove('active'));
+                    // 添加当前按钮的active类
+                    this.classList.add('active');
+                    // 切换模式
+                    switchMode(this.getAttribute('data-mode'));
+                });
+            });
+
+            // 集合按钮
+            setButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除所有active类
+                    setButtons.forEach(btn => btn.classList.remove('active'));
+                    // 添加当前按钮的active类
+                    this.classList.add('active');
+                    // 更新设置
+                    settings.sets = parseInt(this.getAttribute('data-sets'));
+                });
+            });
+
+            // 主题按钮
+            themeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除所有active类
+                    themeButtons.forEach(btn => btn.classList.remove('active'));
+                    // 添加当前按钮的active类
+                    this.classList.add('active');
+                    // 应用颜色主题
+                    applyColorTheme(this.getAttribute('data-theme'));
+                });
+            });
+
+            // 旋转速度和持续时间滑块
+            if (spinSpeedInput) {
+                spinSpeedInput.addEventListener('input', function() {
+                    spinSpeedValue.textContent = this.value;
+                    settings.spinSpeed = parseInt(this.value);
+                });
+            }
+
+            if (spinDurationInput) {
+                spinDurationInput.addEventListener('input', function() {
+                    spinDurationValue.textContent = this.value;
+                    settings.spinDuration = parseInt(this.value);
+                });
+            }
+
+            // 纸屑效果切换
+            if (confettiEnabledInput) {
+                confettiEnabledInput.addEventListener('change', function() {
+                    settings.confettiEnabled = this.checked;
+                });
+            }
+
+            // 声音切换
+            if (soundEnabledInput) {
+                soundEnabledInput.addEventListener('change', function() {
+                    settings.soundEnabled = this.checked;
+                    soundSettingsGroup.style.display = this.checked ? 'block' : 'none';
+                });
+            }
+
+            // 音效主题选择
+            if (soundThemeSelect) {
+                soundThemeSelect.addEventListener('change', function() {
+                    settings.soundTheme = this.value;
+                    updateCurrentSounds();
+                });
+            }
+
+            // 背景颜色应用按钮
+            if (applyBgColorBtn) {
+                applyBgColorBtn.addEventListener('click', applyBackgroundColor);
+            }
+
+            // 打开所有结果按钮
+            if (openAllResultsBtn) {
+                openAllResultsBtn.addEventListener('click', openResultsModal);
+            }
+
+            // 关闭结果模态窗口按钮
+            if (closeResultsModal) {
+                closeResultsModal.addEventListener('click', closeResultsModal);
+            }
+
+            // 重置结果按钮
+            if (resetResultsBtn) {
+                resetResultsBtn.addEventListener('click', resetResults);
+            }
+
+            // 清除所有结果按钮
+            if (clearResultsBtn) {
+                clearResultsBtn.addEventListener('click', function() {
+                    resetResults();
+                    closeResultsModal();
+                });
+            }
+
+            // 分享结果按钮
+            if (shareResultsBtn) {
+                shareResultsBtn.addEventListener('click', function() {
+                    alert('Share functionality coming soon!');
+                });
+            }
+
+            // 折叠/展开控制面板
+            if (toggleInputControlsBtn) {
+                toggleInputControlsBtn.addEventListener('click', function() {
+                    togglePanel('inputControls');
+                });
+            }
+
+            // 折叠/展开工具设置
+            if (toggleToolSettingsBtn) {
+                toggleToolSettingsBtn.addEventListener('click', function() {
+                    togglePanel('toolSettings');
+                });
+            }
+
+            // 隐藏输入按钮
+            if (hideInputsBtn) {
+                hideInputsBtn.addEventListener('click', function() {
+                    togglePanel('inputControls');
+                });
+            }
+
+            // 导航按钮
+            if (switchWheelBtn) {
+                switchWheelBtn.addEventListener('click', function() {
+                    alert('Other wheel types coming soon!');
+                });
+            }
+
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', function() {
+                    togglePanel('toolSettings');
+                });
+            }
+
+            if (shareBtn) {
+                shareBtn.addEventListener('click', function() {
+                    alert('Share functionality coming soon!');
+                });
+            }
+
+            if (toolsBtn) {
+                toolsBtn.addEventListener('click', function() {
+                    alert('More tools coming soon!');
+                });
+            }
+
+            // 点击模态窗口背景关闭
+            window.addEventListener('click', function(event) {
+                if (event.target === resultsModal) {
+                    closeResultsModal();
+                }
+            });
+
+            // 添加移动端触摸事件支持
+            if (canvas) {
+                canvas.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                });
+            }
+
+            // 响应式调整
+            window.addEventListener('resize', function() {
+                // 重新绘制轮盘
+                drawWheel();
+            });
+            
+            console.log("事件监听器设置完成");
+        }
+
+        // 初始化应用
+        preloadSounds();
+        updateCurrentSounds();
+        initWheel();
+        setupEventListeners();
+        
+        console.log("应用初始化完成");
+    }
+})(); 

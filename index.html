@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Yes or No Wheel - A simple decision-making tool to help you make choices between yes and no. Spin the wheel and get your answer immediately!">
+    <meta name="keywords" content="yes or no wheel, decision wheel, random decision, yes no generator, choice maker">
+    <title>Yes or No Wheel - Make Decisions Easily | YesOrNoGenerator.im</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Yes or No Wheel</h1>
+            <p class="tagline">Let the yes or no wheel decide your questions!</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="intro">
+            <h2>Facing a Tough Decision?</h2>
+            <p>Can't decide between yes or no? Our random yes or no wheel can make the choice for you! Now with up to 8 customizable options, this yes or no wheel is perfect for settling debates, making quick decisions, or just for fun.</p>
+        </section>
+
+        <section class="wheel-section">
+            <div class="wheel-container">
+                <canvas id="wheelCanvas" width="400" height="400"></canvas>
+                <div id="spinnerPointer"></div>
+                <button id="spinButton">SPIN THE WHEEL</button>
+                <div id="resultDisplay"></div>
+            </div>
+            
+            <div class="settings-panel">
+                <h3>Customize Your Yes or No Wheel</h3>
+                
+                <div class="wheel-info">
+                    <h4>Yes or No Wheel Options</h4>
+                    <p class="wheel-description">This yes or no wheel contains 8 alternating YES and NO segments to help you make your decision.</p>
+                    <div class="option-legend">
+                        <div class="legend-item">
+                            <span class="color-box yes-color"></span>
+                            <span>YES</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-box no-color"></span>
+                            <span>NO</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label for="spinSpeed">Spin Speed:</label>
+                    <input type="range" id="spinSpeed" min="1" max="10" value="5">
+                </div>
+                
+                <div class="setting-group">
+                    <label for="spinDuration">Spin Duration:</label>
+                    <input type="range" id="spinDuration" min="1" max="10" value="5">
+                </div>
+                
+                <div class="setting-group">
+                    <label for="soundEnabled">Sound Effects:</label>
+                    <input type="checkbox" id="soundEnabled" checked>
+                </div>
+                
+                <div class="sound-settings" id="soundSettingsGroup">
+                    <h4>Confetti & Sound</h4>
+                    
+                    <div class="setting-group">
+                        <label for="soundTheme">Sound Theme:</label>
+                        <select id="soundTheme">
+                            <option value="default">Default</option>
+                            <option value="halloween">Halloween</option>
+                            <option value="cheerful">Cheerful</option>
+                            <option value="space">Space</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="startSoundSelect">Start Sound:</label>
+                        <select id="startSoundSelect">
+                            <option value="default">Default</option>
+                            <option value="click">Click</option>
+                            <option value="beep">Beep</option>
+                            <option value="chime">Chime</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="spinningSoundSelect">Spinning Sound:</label>
+                        <select id="spinningSoundSelect">
+                            <option value="default">DeepFrozenApps Tick</option>
+                            <option value="click">Mechanical Click</option>
+                            <option value="digital">Digital Tick</option>
+                            <option value="soft">Soft Tick</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="endingSoundSelect">Ending Sound:</label>
+                        <select id="endingSoundSelect">
+                            <option value="default">Positive Orchestral Jingle</option>
+                            <option value="tada">Ta-Da</option>
+                            <option value="chime">Success Chime</option>
+                            <option value="bell">Bell</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label for="confettiEnabled">Confetti Effects:</label>
+                    <input type="checkbox" id="confettiEnabled" checked>
+                </div>
+            </div>
+        </section>
+        
+        <section class="how-it-works">
+            <h2>How Our Yes or No Wheel Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <p>Enter your options in the customization panel</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <p>Customize your yes or no wheel settings if desired</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <p>Click the "Spin the Wheel" button</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <p>Get your answer from the yes or no wheel!</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="faq">
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq-item">
+                <h3>Is the Yes or No Wheel truly random?</h3>
+                <p>Yes! Our yes or no wheel uses a cryptographically secure random number generator to ensure completely fair and random results every time you spin.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Can I use this yes or no wheel for important decisions?</h3>
+                <p>While our yes or no wheel is fun to use, we recommend using it primarily for casual decisions or as a tie-breaker. For major life decisions, consider all factors carefully!</p>
+            </div>
+            <div class="faq-item">
+                <h3>How many options can I add to the yes or no wheel?</h3>
+                <p>Currently, you can add up to 8 different options to the yes or no wheel, each with its own custom text and color, giving you more flexibility than a simple yes/no choice.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 YesOrNoGenerator.im - The Ultimate Yes or No Wheel</p>
+            <p>Need help making a decision? Let our yes or no wheel guide you with customizable options!</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html> 
